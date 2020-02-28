@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+items:
+### SERVICES ####
+# CAPI Service
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      io.kompose.service: capi
+    name: capi
+  spec:
+    ports:
+    - name: "8380"
+      port: 8380
+      targetPort: 8380
+    selector:
+      io.kompose.service: capi
+  status:
+    loadBalancer: {}
+### DEPLOYMENT ####
+# CAPI Deployment    
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      io.kompose.service: capi
+    name: capi
+  spec:
+    selector:
+      matchLabels:
+        io.kompose.service: capi
+    replicas: 1
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          io.kompose.service: capi
+      spec:
+        containers:
+        - env:
+          - name: api.gateway.api.running.inspector.period
+            value: "60000"
+          - name: api.gateway.api.throttling.inspector.period
+            value: "5000"
+          - name: api.gateway.error.endpoint
+            value: localhost:8380/capi-error
+          - name: api.gateway.grafana.create.panels
+            value: "false"
+          - name: api.gateway.grafana.endpoint
+            value: http://localhost:8080/grafana
+          - name: api.gateway.prometheus.endpoint
+            value: http://prometheus:9090
+          - name: api.gateway.traffic.inspector.enabled
+            value: "true"
+          - name: api.gateway.traffic.inspector.kafka.broker
+            value: kafkaf-cp-kafka-headless:9092
+          - name: api.gateway.traffic.inspector.kafka.groupId
+            value: capiGroup
+          - name: api.gateway.traffic.inspector.kafka.topic
+            value: capi-traffic-inspector
+          - name: api.gateway.zipkin.endpoint
+            value: http://zipkin:9411/api/v2/spans
+          - name: server.ssl.enabled
+            value: "true"
+          - name: server.ssl.key-alias
+            value: capigateway
+          - name: server.ssl.key-store
+            value: /keys/capi.p12
+          - name: server.ssl.key-store-password
+            value: capigateway
+          - name: server.ssl.key-store-type
+            value: PKCS12
+          - name: server.ssl.trust-store
+            value: /keys/truststore.jks
+          - name: server.ssl.trust-store-password
+            value: capigateway
+          - name: spring.data.mongodb.database
+            value: capi
+          - name: spring.data.mongodb.host
+            value: mongo
+          - name: spring.data.mongodb.password
+            value: capi
+          - name: spring.data.mongodb.port
+            value: "27017"
+          - name: spring.data.mongodb.username
+            value: capi
+          - name: spring.profiles.active
+            value: tst
+          image: surisoft/capi-gateway:1.2.1
+          name: capi
+          ports:
+          - containerPort: 8380
+          resources: {}
+          volumeMounts:
+          - name: certificate
+            mountPath: /keys/capi.p12
+            subPath: capi.p12
+          - name: truststore
+            mountPath: /keys/truststore.jks
+            subPath: truststore.jks  
+        restartPolicy: Always
+        volumes:
+        - name: certificate
+          configMap:
+            name: certificate
+        - name: truststore
+          configMap:
+            name: truststore
+  status: {}
+kind: List
+metadata: {}

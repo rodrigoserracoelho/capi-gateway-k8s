@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: capi-rest
+    name: capi-rest
+  spec:
+    ports:
+    - name: "8080"
+      port: 8080
+      targetPort: 8080
+    selector:
+      app: capi-rest
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: capi-rest
+    name: capi-rest
+  spec:
+    selector:
+      matchLabels:
+        app: capi-rest
+    replicas: 1
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: capi-rest
+      spec:
+        containers:
+        - env:
+          - name: server.ssl.enabled
+            value: "true"
+          - name: server.ssl.key-alias
+            value: capigateway
+          - name: server.ssl.key-store
+            value: /keys/capi.p12
+          - name: server.ssl.key-store-password
+            value: capigateway
+          - name: server.ssl.key-store-type
+            value: PKCS12
+          - name: server.ssl.trust-store
+            value: /keys/truststore.jks
+          - name: server.ssl.trust-store-password
+            value: capigateway
+          - name: spring.data.mongodb.database
+            value: capi
+          - name: spring.data.mongodb.host
+            value: mongo
+          - name: spring.data.mongodb.password
+            value: capi
+          - name: spring.data.mongodb.port
+            value: "27017"
+          - name: spring.data.mongodb.username
+            value: capi
+          image: surisoft/capi-gateway-rest:1.2.2
+          name: capi-rest
+          ports:
+          - containerPort: 8080
+          resources: {}
+          volumeMounts:
+          - name: certificate
+            mountPath: /keys/capi.p12
+            subPath: capi.p12
+          - name: truststore
+            mountPath: /keys/truststore.jks
+            subPath: truststore.jks 
+        restartPolicy: Always
+        volumes:
+        - name: certificate
+          configMap:
+            name: certificate
+        - name: truststore
+          configMap:
+            name: truststore
+  status: {}
+kind: List
+metadata: {}

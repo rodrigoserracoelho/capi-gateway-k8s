@@ -1,0 +1,52 @@
+apiVersion: v1
+data:
+  init-mongo.js: |-
+    db.createUser(
+        {
+            user: "capi",
+            pwd: "capi",
+            roles: [
+                {
+                    role: "readWrite",
+                    db: "capi"
+                }
+            ]
+        }
+    )
+    db.createCollection("capi_client",
+        {
+            "_id" : ObjectId("5dad5972f14df639474b4669"),
+            "clientId" : "web-publisher",
+            "resourceIds" : [],
+            "secretRequired" : true,
+            "clientSecret" : "$2a$10$oQBqS4ZOEiIGVNiZnB0nMuFw/n/Od57IG/uy4nFuOJxLtHE/Z5jDC",
+            "scoped" : false,
+            "scope" : [
+               "read-foo"
+            ],
+               "authorizedGrantTypes" : [
+               "refresh_token",
+               "password",
+               "client_credentials",
+               "authorization_code"
+            ],
+            "registeredRedirectUri" : [],
+            "authorities" : [
+               {
+                "role" : "ROLE_USER",
+                "_class" : "org.springframework.security.core.authority.SimpleGrantedAuthority"
+               },
+               {
+                "role" : "ROLE_PUBLISHER",
+                "_class" : "org.springframework.security.core.authority.SimpleGrantedAuthority"
+               }
+            ],
+            "accessTokenValiditySeconds" : 60,
+            "refreshTokenValiditySeconds" : 14400,
+            "autoApprove" : false,
+            "_class" : "at.rodrigo.api.gateway.rest.client.CapiClient"
+        }
+    )
+kind: ConfigMap
+metadata:
+  name: mongo-init
