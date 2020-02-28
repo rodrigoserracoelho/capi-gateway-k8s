@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: grafana
+    name: grafana
+  spec:
+    ports:
+    - name: "3000"
+      port: 3000
+      targetPort: 3000
+    selector:
+      app: grafana
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: grafana
+    name: grafana
+  spec:
+    selector:
+      matchLabels:
+        app: grafana
+    replicas: 1
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: grafana
+      spec:
+        containers:
+        - image: grafana/grafana
+          name: capi-grafana
+          ports:
+          - containerPort: 3000
+          resources: {}
+          volumeMounts:
+          - name: grafana-datasource
+            mountPath: /etc/grafana/provisioning/datasources
+            subPath: datasources.yml
+        restartPolicy: Always
+        volumes:
+        - name: grafana-datasource
+          configMap:
+            name: grafana-datasource
+  status: {}
+kind: List
+metadata: {}
