@@ -41,9 +41,17 @@ $ openssl pkcs12 -export -out capi-rest.p12 -name capi-rest -inkey privkey1.pem 
 ```
    - Repeat the previous steps for all the certificates. Ex.: manager, gateway, grafana.
 
-We will be installing Kafka and Zookeeper using Confluent's Helm Chart: https://github.com/confluentinc/cp-helm-charts/tree/master/charts/cp-kafka
-
 # Installation
+  - Start by installing the certificates as configmaps:
+```sh
+$ kubectl create configmap capi-rest-certificate --from-file=$HOME/capi-rest.p12
+```
+   - Repeat the same for all the certificates, and then check if they were installed.
+```sh
+$ kubectl get configmap
+```
+
+##### We will be installing Kafka and Zookeeper using Confluent's Helm Chart: https://github.com/confluentinc/cp-helm-charts/tree/master/charts/cp-kafka
   - Start installing Kafka and Zookeper:
 ```sh
 $ git clone https://github.com/confluentinc/cp-helm-charts.git
@@ -69,6 +77,15 @@ $ helm tiller stop
 ```sh
 $ kubectl get pods
 ```
-
-
+   - Install all the configmaps in this repository:
+```sh
+$ kubectl apply -f configmap-truststore.yaml
+$ kubectl apply -f configmap-grafana.yaml
+$ kubectl apply -f configmap-prometheus.yaml
+$ kubectl apply -f configmap-mongo.yaml
+```
+   - You can again check if they are all installed:
+```sh
+$ kubectl get configmap
+```
 
