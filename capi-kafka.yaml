@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+items:
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      io.kompose.service: zookeeper
+    name: zookeeper
+  spec:
+    ports:
+    - name: client
+      port: 2181
+    - name: follower  
+      port: 2888
+    - name: leader
+      port: 3888  
+    selector:
+      io.kompose.service: zookeeper
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      io.kompose.service: kafka
+    name: kafka
+  spec:
+    ports:
+    - name: kafka-port
+      port: 9092
+    selector:
+      io.kompose.service: kafka
+  status:
+    loadBalancer: {}    
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      io.kompose.service: zookeeper
+    name: zookeeper
+  spec:
+    selector:
+      matchLabels:
+        io.kompose.service: zookeeper
+    replicas: 1
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          io.kompose.service: zookeeper
+      spec:
+        containers:
+        - env:
+          - name: ZOOKEEPER_CLIENT_PORT
+            value: "2181"      
+          image: confluentinc/cp-zookeeper:latest 
+          imagePullPolicy: Always
+          name: zookeeper
+          ports:
+          - containerPort: 2181
+  status: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      io.kompose.service: kafka
+    name: kafka
+  spec:
+    selector:
+      matchLabels:
+        io.kompose.service: kafka
+    replicas: 1
+    strategy:
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          io.kompose.service: kafka
+      spec:
+        containers:
+        - env:
+          - name: ENABLE_AUTO_EXTEND
+            value: "true"
+          - name: KAFKA_RESERVED_BROKER_MAX_ID
+            value: "999999999"
+          - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+            value: "true"
+          - name: KAFKA_PORT
+            value: "9092"
+          - name: KAFKA_ADVERTISED_PORT
+            value: "9092"
+          - name: KAFKA_ADVERTISED_HOST_NAME
+            value: "kafka"
+          - name: KAFKA_ZOOKEEPER_CONNECT
+            value: zookeeper:2181  
+          - name: ZOOKEEPER_SERVER_1
+            value: zookeeper
+          - name: KAFKA_ADVERTISED_LISTENERS
+            value: PLAINTEXT://kafka:9092 
+          - name: ALLOW_PLAINTEXT_LISTENER
+            value: "yes"  
+          image: bitnami/kafka:latest
+          imagePullPolicy: Always
+          name: kafka
+          ports:
+          - containerPort: 9092
+  status: {}  
+kind: List
+metadata: {}
