@@ -2,8 +2,6 @@
 
 ### Prerequisites
   - Kubernetes 1.9.2+
-  - Helm 2.8.2
-  - Tiller
   
 ##### Tested on:
    - Minikube with Docker driver (--vm-driver=none)
@@ -17,15 +15,19 @@
   - Prometheus Manifest / Service
   - Grafana Manifest / Service
   - Config maps (Mongo, Prometheus, Grafana, Certificates)
+  - Kafka / Zookeeper Manifest / Service
 
 ##### The goal is to have the following endpoints available:
   - https://gateway.<your domain>
   - https://manager.<your domain>
+
+We are still integrating the following endpoints on K8s:  
   - https://zipkin.<your domain>
   - https://grafana.<your domain>
 
 # Get your certificates
 If you have already your strategy to generate certificates you can skip this part, we used Lets Encrypt
+
 #### Prerequisites:
    * The domain configured
    * Running apache on port 80
@@ -51,27 +53,10 @@ $ kubectl create configmap capi-rest-certificate --from-file=$HOME/capi-rest.p12
 $ kubectl get configmap
 ```
 
-##### We will be installing Kafka and Zookeeper using Confluent's Helm Chart: https://github.com/confluentinc/cp-helm-charts/tree/master/charts/cp-kafka
-  - Start installing Kafka and Zookeper:
+##### Start by running Kafka and Zookeeper
+
 ```sh
-$ git clone https://github.com/confluentinc/cp-helm-charts.git
-```
-  - Edit cp-helm-chars/values.yaml
-  - Make sure you enable only Zookeeper and Kafka:
-```sh
-cp-zookeeper:
-  enabled: true
-  servers: 1
-.......
-cp-kafka:
-  enabled: true
-  servers: 1
-```
-- All the other components should be disabled.
-```sh
-$ helm tiller start
-$ helm install --name kafkaf -f ./cp-helm-charts/values.yaml
-$ helm tiller stop
+$ kubectl apply -f capi-kafka-yaml
 ```
 - Check if Kafka and Zookeeper are running
 ```sh
@@ -88,4 +73,3 @@ $ kubectl apply -f configmap-mongo.yaml
 ```sh
 $ kubectl get configmap
 ```
-
