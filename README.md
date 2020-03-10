@@ -1,6 +1,15 @@
 # CAPI Gateway Kubernetes Installation
 
-This project contains all the necessary files to install CAPI Gateway on a K8S service.
+### Prerequisites
+  - Kubernetes 1.9.2+
+  - Helm 2.8.2
+  - Tiller
+  
+##### Tested on:
+   - Minikube with Docker driver (--vm-driver=none)
+   - AWS AKS
+
+##### This project contains all the necessary files to install CAPI Gateway on a K8s service.
   - CAPI Manifest / Service (CAMEL Route server)
   - CAPI Rest Manifest / Service (Manager server)
   - Mongo Manifest / Service
@@ -9,15 +18,40 @@ This project contains all the necessary files to install CAPI Gateway on a K8S s
   - Grafana Manifest / Service
   - Config maps (Mongo, Prometheus, Grafana, Certificates)
 
-We will be installing Kafka and Zookeeper using Confluent's Helm Chart: https://github.com/confluentinc/cp-helm-charts/tree/master/charts/cp-kafka
+##### The goal is to have the following endpoints available:
+  - https://gateway.<your domain>
+  - https://manager.<your domain>
+  - https://zipkin.<your domain>
+  - https://grafana.<your domain>
 
-# Prerequisites
-  - Kubernetes 1.9.2+
-  - Helm 2.8.2
-  - Tiller
-  
-Tested with Minikube with Docker driver (--vm-driver=none)
+# Get your certificates
+If you have already your strategy to generate certificates you can skip this part, we used Lets Encrypt
+#### Prerequisites:
+   * The domain configured
+   * Running apache on port 80
+   * Docker Installed (create local directories certbot and html)
+#### Steps:
+   - Run the certbot
+```sh
+$ sudo docker run -v $HOME/html:/html -v $HOME/certbot:/etc/letsencrypt certbot/certbot certonly --webroot -w /html -d manager.<your domain> -m <your e-mail> -t -n --agree-tos
+```
+   - Go the directory where the pem files were generated, you should have the certificate, the private key and the full chain. Generate a P12 file for your server. (this file will be installed as a secret in K8s)
+```sh
+$ openssl pkcs12 -export -out capi-rest.p12 -name capi-rest -inkey privkey1.pem -in cert1.pem -certfile fullchain1.pem
+```
+   - Repeat the previous steps for all the certificates. Ex.: manager, gateway, grafana.
+
 # Installation
+  - Start by installing the certificates as configmaps:
+```sh
+$ kubectl create configmap capi-rest-certificate --from-file=$HOME/capi-rest.p12
+```
+   - Repeat the same for all the certificates, and then check if they were installed.
+```sh
+$ kubectl get configmap
+```
+
+##### We will be installing Kafka and Zookeeper using Confluent's Helm Chart: https://github.com/confluentinc/cp-helm-charts/tree/master/charts/cp-kafka
   - Start installing Kafka and Zookeper:
 ```sh
 $ git clone https://github.com/confluentinc/cp-helm-charts.git
@@ -43,5 +77,15 @@ $ helm tiller stop
 ```sh
 $ kubectl get pods
 ```
-
+   - Install all the configmaps in this repository:
+```sh
+$ kubectl apply -f configmap-truststore.yaml
+$ kubectl apply -f configmap-grafana.yaml
+$ kubectl apply -f configmap-prometheus.yaml
+$ kubectl apply -f configmap-mongo.yaml
+```
+   - You can again check if they are all installed:
+```sh
+$ kubectl get configmap
+```
 
