@@ -13,7 +13,8 @@ data:
             ]
         }
     )
-    db.createCollection("capi_client",
+    db.createCollection("capi_client", {})
+    db.capi_client.insert(
         {
             "_id" : ObjectId("5dad5972f14df639474b4669"),
             "clientId" : "web-publisher",
