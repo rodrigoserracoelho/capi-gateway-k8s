@@ -12,6 +12,14 @@
 ```sh
 eksctl create cluster -f capi-cluster.yaml 
 ```
+   - Add the cluster to your kubeconfig
+```sh
+aws eks --region eu-west-1 update-kubeconfig --name capi
+```
+  - Check the cluster
+```sh
+kubectl get svc
+``` 
 
 ##### This project contains all the necessary files to install CAPI Gateway on a K8s service.
   - CAPI Manifest / Service (CAMEL Route server)
