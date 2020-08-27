@@ -5,7 +5,13 @@
   
 ##### Tested on:
    - Minikube with Docker driver (--vm-driver=none)
-   - AWS AKS
+   - AWS EKS
+
+##### AWS EKS
+   - Create your capi cluster
+```sh
+eksctl create cluster -f capi-cluster.yaml 
+```
 
 ##### This project contains all the necessary files to install CAPI Gateway on a K8s service.
   - CAPI Manifest / Service (CAMEL Route server)
