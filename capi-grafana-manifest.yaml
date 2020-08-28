@@ -42,7 +42,7 @@ items:
           volumeMounts:
           - name: grafana-datasource
             mountPath: /etc/grafana/provisioning/datasources
-            subPath: datasources.yml
+            subPath: grafana-datasources.yml
         restartPolicy: Always
         volumes:
         - name: grafana-datasource
